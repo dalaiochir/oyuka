@@ -40,7 +40,7 @@ export default function ResultPage() {
       </main>
     );
   }
-
+// test
   return (
     <main className={styles.page}>
       <h1 className={styles.h1}>Үр дүн</h1>
