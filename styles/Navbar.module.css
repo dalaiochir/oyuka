@@ -1,0 +1,29 @@
+.header {
+  position: sticky;
+  top: 0;
+  background: rgba(11,16,32,0.82);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  z-index: 20;
+}
+
+.inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand { font-weight: 700; letter-spacing: 0.2px; }
+
+.nav { display: flex; gap: 10px; flex-wrap: wrap; }
+.link {
+  color: rgba(233,238,252,0.82);
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+.link:hover { background: rgba(255,255,255,0.06); }
+.active { background: rgba(106,169,255,0.14); color: #fff; }
