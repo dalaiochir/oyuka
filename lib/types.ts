@@ -8,6 +8,18 @@ export type Trial = {
   threatSide: 0 | 1;
 };
 
+export type Question = {
+  id: string;
+  stage: "threat" | "neutral";
+  prompt: string;
+  correct: "left" | "right";
+  leftLabel?: string;
+  rightLabel?: string;
+  leftImage?: string;
+  rightImage?: string;
+};
+
+
 export type TrialResult = {
   trialId: string;
   phase: Phase;

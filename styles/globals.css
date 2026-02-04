@@ -23,6 +23,7 @@ html, body { padding: 0; margin: 0; background: var(--bg); color: var(--text); f
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 18px;
+  
 }
 
 .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
