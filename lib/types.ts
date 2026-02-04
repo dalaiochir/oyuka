@@ -21,6 +21,18 @@ export type TrialResult = {
   neutralWord: string;
 };
 
+export type Question = {
+  id: string;
+  stage: "threat" | "neutral";
+  prompt: string;
+  correct: "left" | "right";
+  leftLabel?: string;
+  rightLabel?: string;
+  leftImage?: string;
+  rightImage?: string;
+};
+
+
 export type Attempt = {
   id: string;
   createdAtIso: string;
