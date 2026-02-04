@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import TwoChoiceWordCard from "../../components/TwoChoiceWordCard";
-import { buildTwoStageWordQuestions } from "../../lib/questionsFromWords";
 import styles from "../../styles/Test.module.css";
+import { buildTwoStageWordQuestionsNoRepeat } from "../../lib/questionsFromWords";
+
+
 
 type Stage = "threat" | "neutral";
 
@@ -12,17 +14,18 @@ export default function TestPage() {
   const router = useRouter();
 
   const stages = useMemo(() => {
-    const { threatQuestions, neutralQuestions, pairCount } = buildTwoStageWordQuestions();
+    const { threatQuestions, neutralQuestions, pairCountPerStage } =
+  buildTwoStageWordQuestionsNoRepeat();
 
     return [
       {
         key: "threat" as Stage,
-        title: `1-р үе шат: Занал үг (${pairCount} асуулт)`,
+        title: `1-р үе шат: Занал үг (${pairCountPerStage} асуулт)`,
         questions: threatQuestions,
       },
       {
         key: "neutral" as Stage,
-        title: `2-р үе шат: Энгийн үг (${pairCount} асуулт)`,
+        title: `2-р үе шат: Энгийн үг (${pairCountPerStage} асуулт)`,
         questions: neutralQuestions,
       },
     ];

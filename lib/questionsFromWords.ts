@@ -10,18 +10,19 @@ function shuffle<T>(arr: T[]) {
   return a;
 }
 
-export function buildTwoStageWordQuestions() {
-  const threat = shuffle(THREAT_WORDS);
-  const neutral = shuffle(NEUTRAL_WORDS);
+function buildStageQuestions(
+  stage: "threat" | "neutral",
+  threatWords: string[],
+  neutralWords: string[],
+  prompt: string
+): Question[] {
+  const pairCount = Math.min(threatWords.length, neutralWords.length);
 
-  const pairCount = Math.min(threat.length, neutral.length);
-
-  const threatQuestions: Question[] = [];
-  const neutralQuestions: Question[] = [];
+  const questions: Question[] = [];
 
   for (let i = 0; i < pairCount; i++) {
-    const tWord = threat[i];
-    const nWord = neutral[i];
+    const tWord = threatWords[i];
+    const nWord = neutralWords[i];
 
     // random байрлал
     const threatOnLeft = Math.random() < 0.5;
@@ -29,30 +30,70 @@ export function buildTwoStageWordQuestions() {
     const leftWord = threatOnLeft ? tWord : nWord;
     const rightWord = threatOnLeft ? nWord : tWord;
 
-    // 1-р үе: Threat үгийг ол
-    threatQuestions.push({
-      id: `threat_${i + 1}`,
-      stage: "threat",
-      prompt: "Занал хийсэн утгатай үгийг ол",
-      leftImage: "", // ашиглахгүй
-      rightImage: "", // ашиглахгүй
-      correct: threatOnLeft ? "left" : "right",
-      leftLabel: leftWord,
-      rightLabel: rightWord,
-    });
+    const correct =
+      stage === "threat"
+        ? threatOnLeft
+          ? "left"
+          : "right"
+        : threatOnLeft
+        ? "right"
+        : "left";
 
-    // 2-р үе: Neutral үгийг ол
-    neutralQuestions.push({
-      id: `neutral_${i + 1}`,
-      stage: "neutral",
-      prompt: "Энгийн утгатай үгийг ол",
+    questions.push({
+      id: `${stage}_${i + 1}`,
+      stage,
+      prompt,
       leftImage: "",
       rightImage: "",
-      correct: threatOnLeft ? "right" : "left",
+      correct,
       leftLabel: leftWord,
       rightLabel: rightWord,
     });
   }
 
-  return { threatQuestions, neutralQuestions, pairCount };
+  return questions;
+}
+
+export function buildTwoStageWordQuestionsNoRepeat() {
+  // shuffle dataset
+  const threat = shuffle(THREAT_WORDS);
+  const neutral = shuffle(NEUTRAL_WORDS);
+
+  /**
+   * Нэг үг дахин ашиглагдахгүй байлгахын тулд:
+   * - Stage1 болон Stage2 дээр ашиглах үгнүүдийг тусад нь салгаж өгнө
+   *
+   * Stage1 ашиглах тоо = k
+   * Stage2 ашиглах тоо = k
+   * Тэгэхээр нийт хэрэгтэй threat = 2k, neutral = 2k
+   *
+   * k = floor(min(threat.length, neutral.length) / 2)
+   */
+  const k = Math.floor(Math.min(threat.length, neutral.length) / 2);
+
+  const threatStageThreatWords = threat.slice(0, k);
+  const threatStageNeutralWords = neutral.slice(0, k);
+
+  const neutralStageThreatWords = threat.slice(k, 2 * k);
+  const neutralStageNeutralWords = neutral.slice(k, 2 * k);
+
+  const threatQuestions = buildStageQuestions(
+    "threat",
+    threatStageThreatWords,
+    threatStageNeutralWords,
+    "Занал хийсэн утгатай үгийг ол"
+  );
+
+  const neutralQuestions = buildStageQuestions(
+    "neutral",
+    neutralStageThreatWords,
+    neutralStageNeutralWords,
+    "Энгийн утгатай үгийг ол"
+  );
+
+  return {
+    threatQuestions,
+    neutralQuestions,
+    pairCountPerStage: k,
+  };
 }
