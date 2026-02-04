@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import styles from "../../styles/Page.module.css";
 import table from "../../styles/History.module.css";
 import { Attempt } from "../../lib/types";
@@ -10,11 +11,7 @@ import { formatMs, pickBestAttempt } from "../../lib/scoring";
 export default function HistoryPage() {
   const [version, setVersion] = useState(0);
 
-  const attempts = useMemo<Attempt[]>(() => {
-    return loadHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [version]);
-
+  const attempts = useMemo<Attempt[]>(() => loadHistory(), [version]);
   const best = useMemo(() => pickBestAttempt(attempts), [attempts]);
   const latest = attempts[0] ?? null;
 
@@ -22,7 +19,7 @@ export default function HistoryPage() {
     <main className={styles.page}>
       <h1 className={styles.h1}>Түүх</h1>
       <p className={styles.p}>
-        Таны тестүүд хадгалагдана. Хамгийн сүүлийн оролдлогыг “Best” оролдлоготой харьцуулж харуулна.
+        Оролдлого дээр дарж дэлгэрэнгүй (Excel шиг) trial хүснэгтээр харна.
       </p>
 
       {latest && best && (
@@ -72,6 +69,7 @@ export default function HistoryPage() {
                 <th>Threat RT</th>
                 <th>Neutral RT</th>
                 <th>ABS</th>
+                <th>Дэлгэрэнгүй</th>
               </tr>
             </thead>
             <tbody>
@@ -83,6 +81,11 @@ export default function HistoryPage() {
                   <td>{Math.round(a.threat.meanRtMs)}ms</td>
                   <td>{Math.round(a.neutral.meanRtMs)}ms</td>
                   <td>{Math.round(a.absMs)}ms</td>
+                  <td>
+                    <Link href={`/history/${a.id}`} style={{ color: "#fff", textDecoration: "underline" }}>
+                      Харах
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>

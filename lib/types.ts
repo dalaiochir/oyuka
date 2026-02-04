@@ -19,19 +19,10 @@ export type TrialResult = {
   correct: boolean;
   threatWord: string;
   neutralWord: string;
-};
 
-export type Question = {
-  id: string;
-  stage: "threat" | "neutral";
-  prompt: string;
-  correct: "left" | "right";
-  leftLabel?: string;
-  rightLabel?: string;
-  leftImage?: string;
-  rightImage?: string;
+  // ✅ шинэ: threat word (emotional) хаана байсан бэ
+  threatSide?: "left" | "right";
 };
-
 
 export type Attempt = {
   id: string;
@@ -49,8 +40,7 @@ export type Attempt = {
     accuracyPct: number;
   };
 
-  // Attention Bias Score (ABS) = congruent RT - incongruent RT
-  // Here: threat phase mean RT - neutral phase mean RT
+  // Attention Bias Score (ABS) = threat mean RT - neutral mean RT
   absMs: number;
 
   results: TrialResult[];
