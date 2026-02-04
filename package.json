@@ -13,12 +13,13 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
+
   "devDependencies": {
     "@types/node": "^20.11.30",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "^15.5.11",
+    "eslint-config-next": "15.5.11",
     "typescript": "^5.4.5"
   }
 }
