@@ -2,20 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import TwoChoiceWordCard from "../../components/TwoChoiceWordCard";
-import styles from "../../styles/Test.module.css";
+import TwoChoiceWordCard, { WordCardPhase } from "../../components/TwoChoiceWordCard";
 import { buildTwoStageWordQuestionsNoRepeat } from "../../lib/questionsFromWords";
-
-
+import styles from "../../styles/Test.module.css";
 
 type Stage = "threat" | "neutral";
+
+const PRE_MS = 600;   // “+” харагдах хугацаа
+const POST_MS = 550;  // “•” харагдах хугацаа
 
 export default function TestPage() {
   const router = useRouter();
 
   const stages = useMemo(() => {
     const { threatQuestions, neutralQuestions, pairCountPerStage } =
-  buildTwoStageWordQuestionsNoRepeat();
+      buildTwoStageWordQuestionsNoRepeat();
 
     return [
       {
@@ -42,16 +43,18 @@ export default function TestPage() {
   const [threatCorrect, setThreatCorrect] = useState(0);
   const [neutralCorrect, setNeutralCorrect] = useState(0);
 
-  const [selected, setSelected] = useState<"left" | "right" | null>(null);
-  const [locked, setLocked] = useState(false);
+  // ✅ phase: pre -> show -> post
+  const [phase, setPhase] = useState<WordCardPhase>("pre");
 
+  // ✅ 1-р үе дууссаны дараах 3 секунд
   const [intermission, setIntermission] = useState<{ active: boolean; seconds: number }>({
     active: false,
     seconds: 0,
   });
 
   const startedAtRef = useRef<number | null>(null);
-  const timerRef = useRef<number | null>(null);
+  const intermissionTimerRef = useRef<number | null>(null);
+  const phaseTimerRef = useRef<number | null>(null);
 
   const stage = stages[stageIndex];
   const q = stage?.questions?.[qIndex];
@@ -59,17 +62,37 @@ export default function TestPage() {
   const answeredCount =
     stages.slice(0, stageIndex).reduce((acc, s) => acc + s.questions.length, 0) + qIndex;
 
+  // ✅ асуулт бүр эхлэхэд: PRE -> SHOW
+  useEffect(() => {
+    if (intermission.active) return;
+    if (!q) return;
+
+    // reset phase
+    setPhase("pre");
+
+    if (phaseTimerRef.current) window.clearTimeout(phaseTimerRef.current);
+    phaseTimerRef.current = window.setTimeout(() => {
+      setPhase("show");
+    }, PRE_MS);
+
+    return () => {
+      if (phaseTimerRef.current) window.clearTimeout(phaseTimerRef.current);
+      phaseTimerRef.current = null;
+    };
+  }, [qIndex, stageIndex, intermission.active, q]);
+
+  // ✅ intermission countdown: 3..2..1 -> stage2 start
   useEffect(() => {
     if (!intermission.active) return;
 
-    if (timerRef.current) window.clearInterval(timerRef.current);
+    if (intermissionTimerRef.current) window.clearInterval(intermissionTimerRef.current);
 
-    timerRef.current = window.setInterval(() => {
+    intermissionTimerRef.current = window.setInterval(() => {
       setIntermission((prev) => {
         const next = prev.seconds - 1;
         if (next <= 0) {
-          if (timerRef.current) window.clearInterval(timerRef.current);
-          timerRef.current = null;
+          if (intermissionTimerRef.current) window.clearInterval(intermissionTimerRef.current);
+          intermissionTimerRef.current = null;
 
           setStageIndex((si) => Math.min(si + 1, stages.length - 1));
           setQIndex(0);
@@ -81,8 +104,8 @@ export default function TestPage() {
     }, 1000);
 
     return () => {
-      if (timerRef.current) window.clearInterval(timerRef.current);
-      timerRef.current = null;
+      if (intermissionTimerRef.current) window.clearInterval(intermissionTimerRef.current);
+      intermissionTimerRef.current = null;
     };
   }, [intermission.active, stages.length]);
 
@@ -112,14 +135,13 @@ export default function TestPage() {
   };
 
   const goNext = () => {
-    setSelected(null);
-    setLocked(false);
-
+    // next question in same stage
     if (qIndex + 1 < stage.questions.length) {
       setQIndex(qIndex + 1);
       return;
     }
 
+    // stage finished
     if (stageIndex === 0 && stages.length > 1) {
       setIntermission({ active: true, seconds: 3 });
       return;
@@ -130,21 +152,22 @@ export default function TestPage() {
 
   const onPick = (side: "left" | "right") => {
     if (!q) return;
-    if (locked) return;
     if (intermission.active) return;
+    if (phase !== "show") return;
 
     if (startedAtRef.current === null) startedAtRef.current = performance.now();
-
-    setSelected(side);
-    setLocked(true);
 
     const isCorrect = side === q.correct;
     if (stage.key === "threat" && isCorrect) setThreatCorrect((v) => v + 1);
     if (stage.key === "neutral" && isCorrect) setNeutralCorrect((v) => v + 1);
 
-    window.setTimeout(() => {
+    // ✅ үг алга болно + зөв талд “•”
+    setPhase("post");
+
+    if (phaseTimerRef.current) window.clearTimeout(phaseTimerRef.current);
+    phaseTimerRef.current = window.setTimeout(() => {
       goNext();
-    }, 700);
+    }, POST_MS);
   };
 
   if (!q && !intermission.active) {
@@ -181,21 +204,10 @@ export default function TestPage() {
       <TwoChoiceWordCard
         leftText={q!.leftLabel ?? ""}
         rightText={q!.rightLabel ?? ""}
-        disabled={locked}
-        selected={selected}
-        correct={locked ? q!.correct : null}
+        phase={phase}
+        correct={q!.correct}
         onPick={onPick}
       />
-
-      <div className={styles.footer}>
-        {!locked ? (
-          <div className={styles.hint}>Нэгийг сонгоно уу.</div>
-        ) : (
-          <div className={styles.feedback}>
-            {selected === q!.correct ? "✅ Зөв!" : "❌ Буруу. Зөв хариулт тодорсон."}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

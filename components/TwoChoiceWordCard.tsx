@@ -2,44 +2,64 @@
 
 import styles from "../styles/WordCard.module.css";
 
+export type WordCardPhase = "pre" | "show" | "post";
+
 type Props = {
   leftText: string;
   rightText: string;
-  disabled?: boolean;
-  selected?: "left" | "right" | null;
-  correct?: "left" | "right" | null;
+  phase: WordCardPhase;
+  correct: "left" | "right";
   onPick: (side: "left" | "right") => void;
 };
 
 export default function TwoChoiceWordCard({
   leftText,
   rightText,
-  disabled,
-  selected,
+  phase,
   correct,
   onPick,
 }: Props) {
-  const boxClass = (side: "left" | "right") => {
-    const base = styles.choice;
-    if (!selected || !correct) return base;
+  const disabled = phase !== "show";
 
-    const isCorrect = correct === side;
-    const isSelected = selected === side;
+  const renderContent = (side: "left" | "right") => {
+    if (phase === "show") {
+      return <span className={styles.word}>{side === "left" ? leftText : rightText}</span>;
+    }
 
-    if (isCorrect) return `${base} ${styles.correct}`;
-    if (isSelected && !isCorrect) return `${base} ${styles.wrong}`;
-    return `${base} ${styles.dim}`;
+    if (phase === "post") {
+      // ✅ зөв байсан дөрвөлжинд “•” цэг гарна
+      if (correct === side) return <span className={styles.dot}>•</span>;
+      return null;
+    }
+
+    // pre: хоосон
+    return null;
   };
 
   return (
-    <div className={styles.grid}>
-      <button className={boxClass("left")} onClick={() => onPick("left")} disabled={disabled}>
-        <span className={styles.word}>{leftText}</span>
-      </button>
+    <div className={styles.wrapper}>
+      <div className={styles.grid}>
+        <button
+          className={styles.choice}
+          onClick={() => onPick("left")}
+          disabled={disabled}
+          aria-disabled={disabled}
+        >
+          {renderContent("left")}
+        </button>
 
-      <button className={boxClass("right")} onClick={() => onPick("right")} disabled={disabled}>
-        <span className={styles.word}>{rightText}</span>
-      </button>
+        <button
+          className={styles.choice}
+          onClick={() => onPick("right")}
+          disabled={disabled}
+          aria-disabled={disabled}
+        >
+          {renderContent("right")}
+        </button>
+      </div>
+
+      {/* ✅ асуулт эхлэхийн өмнө “+” */}
+      {phase === "pre" && <div className={styles.plus}>+</div>}
     </div>
   );
 }
