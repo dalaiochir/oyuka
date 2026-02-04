@@ -6,23 +6,44 @@
   flex-wrap: wrap;
 }
 
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .back {
   display: inline-block;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
   text-decoration: none;
   font-weight: 800;
+}
+
+.csvBtn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.10);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.csvBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .wrap {
   margin-top: 14px;
   overflow: auto;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .t {
@@ -32,15 +53,17 @@
   font-size: 13px;
 }
 
-.t th, .t td {
+.t th,
+.t td {
   padding: 10px 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-  border-right: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   text-align: left;
   white-space: nowrap;
 }
 
-.t th:last-child, .t td:last-child {
+.t th:last-child,
+.t td:last-child {
   border-right: none;
 }
 
@@ -48,12 +71,12 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   font-weight: 900;
 }
 
 .t tbody tr:nth-child(even) td {
-  background: rgba(255,255,255,0.02);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .word {

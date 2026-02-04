@@ -14,19 +14,86 @@ function sideLabel(s?: "left" | "right") {
 }
 
 function dotPositionFromPhase(phase: TrialResult["phase"]) {
-  // зураг дээр "DotPosition" = Emotional / Neutral маягаар харагдаж байгаа
+  // зураг дээр "DotPosition" = Emotional / Neutral
   return phase === "threat" ? "Emotional" : "Neutral";
 }
 
 function emotionCategory() {
-  // бидний хувьд EmotionalWord = Threat word гэж үзнэ
   return "Threat";
 }
 
 function fmtSeconds(rtMs: number) {
-  // зураг шиг секунд, таслалаар
-  const s = (rtMs / 1000);
-  return s.toFixed(6).replace(".", ",");
+  // секунд, таслалаар (png дээр шиг)
+  return (rtMs / 1000).toFixed(6).replace(".", ",");
+}
+
+function csvEscape(value: string) {
+  // CSV стандарт: " доторх " => ""
+  const v = value.replace(/"/g, '""');
+  return `"${v}"`;
+}
+
+function buildCsv(attempt: Attempt) {
+  const headers = [
+    "ConditionID",
+    "Round",
+    "EmotionalWord",
+    "NeutralWord",
+    "EmotionCategory",
+    "DotPosition",
+    "EmotionalWordSide",
+    "CorrectResponse",
+    "TimeOut",
+    "ResponseTime",
+  ];
+
+  const rows = attempt.results.map((r, i) => {
+    const conditionId = attempt.id.slice(0, 6);
+    const round = String(i + 1);
+    const emotionalWord = r.threatWord ?? "";
+    const neutralWord = r.neutralWord ?? "";
+    const emotionCat = emotionCategory();
+    const dotPos = dotPositionFromPhase(r.phase);
+    const emotionalSide = sideLabel(r.threatSide);
+    const correctResponse = String(r.correct);
+    const timeOut = "False";
+    const responseTime = fmtSeconds(r.rtMs);
+
+    return [
+      conditionId,
+      round,
+      emotionalWord,
+      neutralWord,
+      emotionCat,
+      dotPos,
+      emotionalSide,
+      correctResponse,
+      timeOut,
+      responseTime,
+    ];
+  });
+
+  // delimiter = comma. (Excel-д Монгол locale дээр separator өөр байж болно, гэхдээ стандарт нь comma)
+  // Хэрвээ Excel дээр шууд зөв задрахгүй байвал хэлээрэй — “;” болгож өгч болно.
+  const lines = [
+    headers.map(csvEscape).join(","),
+    ...rows.map((r) => r.map(csvEscape).join(",")),
+  ];
+
+  // BOM нэмбэл Excel UTF-8-г зөв уншина
+  return "\uFEFF" + lines.join("\n");
+}
+
+function downloadCsv(filename: string, csvText: string) {
+  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 export default function AttemptDetailPage() {
@@ -43,22 +110,42 @@ export default function AttemptDetailPage() {
       <main className={styles.page}>
         <h1 className={styles.h1}>Оролдлого олдсонгүй</h1>
         <p className={styles.p}>Түүх устсан эсвэл ID буруу байж магадгүй.</p>
-        <Link className={sheet.back} href="/history">← Түүх рүү буцах</Link>
+        <Link className={sheet.back} href="/history">
+          ← Түүх рүү буцах
+        </Link>
       </main>
     );
   }
+
+  const fileName = `attempt_${attempt.createdAtIso.replace(/[:.]/g, "-")}_${attempt.id.slice(0, 6)}.csv`;
 
   return (
     <main className={styles.page}>
       <div className={sheet.head}>
         <div>
-          <h1 className={styles.h1} style={{ marginBottom: 6 }}>Attempt дэлгэрэнгүй</h1>
+          <h1 className={styles.h1} style={{ marginBottom: 6 }}>
+            Attempt дэлгэрэнгүй
+          </h1>
           <p className={styles.p} style={{ marginBottom: 0 }}>
             {new Date(attempt.createdAtIso).toLocaleString()} • ID: {attempt.id}
           </p>
         </div>
 
-        <Link className={sheet.back} href="/history">← Түүх рүү буцах</Link>
+        <div className={sheet.actions}>
+          <button
+            className={sheet.csvBtn}
+            onClick={() => {
+              const csv = buildCsv(attempt);
+              downloadCsv(fileName, csv);
+            }}
+          >
+            CSV татах
+          </button>
+
+          <Link className={sheet.back} href="/history">
+            ← Түүх рүү буцах
+          </Link>
+        </div>
       </div>
 
       <div className={sheet.wrap}>
@@ -85,7 +172,7 @@ export default function AttemptDetailPage() {
                 <td>{i + 1}</td>
                 <td className={sheet.word}>{r.threatWord}</td>
                 <td className={sheet.word}>{r.neutralWord}</td>
-                <td>{emotionCategory()}</td>
+                <td>Threat</td>
                 <td>{dotPositionFromPhase(r.phase)}</td>
                 <td>{sideLabel(r.threatSide)}</td>
                 <td className={r.correct ? sheet.true : sheet.false}>{String(r.correct)}</td>
@@ -98,7 +185,7 @@ export default function AttemptDetailPage() {
       </div>
 
       <p className={styles.p} style={{ marginTop: 10, opacity: 0.85 }}>
-        * Хуучин хадгалсан түүхүүд дээр “EmotionalWordSide” `-` гэж гарч болно (өмнө нь хадгалагдаагүй байсан).
+        * Excel дээр CSV задрах асуудал гарвал хэлээрэй — delimiter-ийг <b>;</b> болгож тааруулж өгнө.
       </p>
     </main>
   );
