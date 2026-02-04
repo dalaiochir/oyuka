@@ -1,94 +1,127 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Attempt } from "../../lib/types";
-import { loadHistory, saveAttempt } from "../../lib/storage";
+import styles from "../../styles/Page.module.css";
+import table from "../../styles/History.module.css";
+import type { Attempt } from "../../lib/types";
+import { loadHistory } from "../../lib/storage";
 import { formatMs, pickBestAttempt } from "../../lib/scoring";
 
 export default function ResultPage() {
   const [attempt, setAttempt] = useState<Attempt | null>(null);
-  const [history, setHistory] = useState<Attempt[]>([]);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("mk_last_attempt_v1");
-    if (!raw) return;
-    const a = JSON.parse(raw) as Attempt;
-
-    // save once: if same id already in history, skip
-    const prev = loadHistory();
-    const exists = prev.some((x) => x.id === a.id);
-    if (!exists) saveAttempt(a);
-
-    setAttempt(a);
-    setHistory(loadHistory());
+    // history-ийн хамгийн сүүлийн (шинээр хадгалагдсан) оролдлогыг шууд харуулна
+    const h = loadHistory();
+    setAttempt(h[0] ?? null);
   }, []);
 
-  const best = useMemo(() => pickBestAttempt(history), [history]);
+  const best = useMemo(() => {
+    const h = loadHistory();
+    return pickBestAttempt(h);
+  }, []);
+
+  const delta = useMemo(() => {
+    if (!attempt || !best) return null;
+    if (best.id === attempt.id) return null;
+
+    return {
+      accuracyDelta: attempt.accuracyPct - best.accuracyPct,
+      timeDeltaMs: attempt.totalMs - best.totalMs,
+      absDeltaMs: attempt.absMs - best.absMs,
+    };
+  }, [attempt, best]);
 
   if (!attempt) {
     return (
-      <div className="card">
-        <h1>Дүн олдсонгүй</h1>
-        <p>Тестийг эхлүүлээд дуусгасны дараа энд дүн гарна.</p>
-        <Link className="btn primary" href="/test">Тест эхлүүлэх</Link>
-      </div>
+      <main className={styles.page}>
+        <h1 className={styles.h1}>Үр дүн</h1>
+        <p className={styles.p}>Одоогоор үр дүн олдсонгүй. Эхлээд тест ажиллуулна уу.</p>
+      </main>
     );
   }
 
-  const compare =
-    best && best.id !== attempt.id
-      ? {
-          accuracyDelta: attempt.overall.accuracyPct - best.overall.accuracyPct,
-          timeDeltaMs: attempt.totalMs - best.totalMs,
-        }
-      : null;
-
   return (
-    <div className="card">
-      <h1>Тестийн дүн</h1>
+    <main className={styles.page}>
+      <h1 className={styles.h1}>Үр дүн</h1>
+      <p className={styles.p}>
+        Таны хамгийн сүүлийн тестийн үр дүн. “Түүх” хэсэгт бүх оролдлогууд хадгалагдана.
+      </p>
 
-      <div className="grid2">
-        <div className="panel">
-          <h2>Одоогийн оролдлого</h2>
-          <p><b>Нийт хугацаа:</b> {formatMs(attempt.totalMs)}</p>
-          <p><b>Нийт зөв:</b> {attempt.overall.correct}/{attempt.overall.total} ({attempt.overall.accuracyPct}%)</p>
-          <p><b>Threat:</b> {attempt.threat.correct}/{attempt.threat.total}</p>
-          <p><b>Neutral:</b> {attempt.neutral.correct}/{attempt.neutral.total}</p>
+      <div className={table.compare}>
+        <div className={table.card}>
+          <div className={table.cardTitle}>Сүүлийн үр дүн</div>
+          <div className={table.kv}>
+            <span>Хугацаа</span>
+            <b>{formatMs(attempt.totalMs)}</b>
+          </div>
+          <div className={table.kv}>
+            <span>Зөв %</span>
+            <b>{attempt.accuracyPct}%</b>
+          </div>
+          <div className={table.kv}>
+            <span>Threat mean RT</span>
+            <b>{Math.round(attempt.threat.meanRtMs)}ms</b>
+          </div>
+          <div className={table.kv}>
+            <span>Neutral mean RT</span>
+            <b>{Math.round(attempt.neutral.meanRtMs)}ms</b>
+          </div>
+          <div className={table.kv}>
+            <span>ABS (T − N)</span>
+            <b>{Math.round(attempt.absMs)}ms</b>
+          </div>
         </div>
 
-        <div className="panel">
-          <h2>Харьцуулалт (Шилдэг)</h2>
-          {!best ? (
-            <p>Одоогоор шилдэг үр дүн байхгүй.</p>
-          ) : (
-            <>
-              <p><b>Шилдэг хугацаа:</b> {formatMs(best.totalMs)}</p>
-              <p><b>Шилдэг хувь:</b> {best.overall.accuracyPct}%</p>
+        {best && (
+          <div className={table.card}>
+            <div className={table.cardTitle}>Best үр дүн</div>
+            <div className={table.kv}>
+              <span>Хугацаа</span>
+              <b>{formatMs(best.totalMs)}</b>
+            </div>
+            <div className={table.kv}>
+              <span>Зөв %</span>
+              <b>{best.accuracyPct}%</b>
+            </div>
+            <div className={table.kv}>
+              <span>Threat mean RT</span>
+              <b>{Math.round(best.threat.meanRtMs)}ms</b>
+            </div>
+            <div className={table.kv}>
+              <span>Neutral mean RT</span>
+              <b>{Math.round(best.neutral.meanRtMs)}ms</b>
+            </div>
+            <div className={table.kv}>
+              <span>ABS (T − N)</span>
+              <b>{Math.round(best.absMs)}ms</b>
+            </div>
 
-              {compare ? (
-                <>
-                  <p>
-                    <b>Accuracy өөрчлөлт:</b>{" "}
-                    {compare.accuracyDelta >= 0 ? `+${compare.accuracyDelta}%` : `${compare.accuracyDelta}%`}
-                  </p>
-                  <p>
-                    <b>Хугацааны өөрчлөлт:</b>{" "}
-                    {compare.timeDeltaMs <= 0 ? `${formatMs(Math.abs(compare.timeDeltaMs))} хурдан` : `${formatMs(compare.timeDeltaMs)} удаан`}
-                  </p>
-                </>
-              ) : (
-                <p>Энэ оролдлого одоогоор шилдэг байна.</p>
-              )}
-            </>
-          )}
-        </div>
+            {delta && (
+              <>
+                <div className={table.kv}>
+                  <span>Accuracy Δ</span>
+                  <b>{delta.accuracyDelta > 0 ? "+" : ""}{delta.accuracyDelta.toFixed(1)}%</b>
+                </div>
+                <div className={table.kv}>
+                  <span>Time Δ</span>
+                  <b>{delta.timeDeltaMs > 0 ? "+" : ""}{Math.round(delta.timeDeltaMs)}ms</b>
+                </div>
+                <div className={table.kv}>
+                  <span>ABS Δ</span>
+                  <b>{delta.absDeltaMs > 0 ? "+" : ""}{Math.round(delta.absDeltaMs)}ms</b>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="row">
-        <Link className="btn" href="/history">Түүх харах</Link>
-        <Link className="btn primary" href="/test">Дахин өгөх</Link>
+      <div style={{ marginTop: 16 }}>
+        <a className={table.danger} style={{ textDecoration: "none", display: "inline-block" }} href="/history">
+          Түүх рүү очих
+        </a>
       </div>
-    </div>
+    </main>
   );
 }
