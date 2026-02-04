@@ -27,18 +27,18 @@ export default function TwoChoiceWordCard({
     }
 
     if (phase === "post") {
-      // ✅ зөв байсан дөрвөлжинд “•” цэг гарна
       if (correct === side) return <span className={styles.dot}>•</span>;
       return null;
     }
 
-    // pre: хоосон
+    // pre үед box алга тул контент хэрэггүй
     return null;
   };
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.grid}>
+      {/* ✅ pre үед box-ууд бүрэн алга (opacity 0, pointer-events none) */}
+      <div className={`${styles.grid} ${phase === "pre" ? styles.gridHidden : ""}`}>
         <button
           className={styles.choice}
           onClick={() => onPick("left")}
@@ -58,7 +58,7 @@ export default function TwoChoiceWordCard({
         </button>
       </div>
 
-      {/* ✅ асуулт эхлэхийн өмнө “+” */}
+      {/* ✅ + зөвхөн pre үед */}
       {phase === "pre" && <div className={styles.plus}>+</div>}
     </div>
   );

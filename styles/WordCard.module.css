@@ -1,18 +1,30 @@
 .wrapper {
   position: relative;
   margin-top: 14px;
+
+  /* ✅ pre үед ч layout үсрэхгүй (box-уудын өндөр хадгална) */
+  min-height: 240px;
 }
 
 .grid {
   display: grid;
   gap: 18px;
   grid-template-columns: 1fr;
+
+  transition: opacity 180ms ease, transform 180ms ease;
 }
 
 @media (min-width: 860px) {
   .grid {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+/* ✅ pre үед box-ууд "алга" болно */
+.gridHidden {
+  opacity: 0;
+  transform: scale(0.98);
+  pointer-events: none;
 }
 
 .choice {
@@ -52,14 +64,14 @@
 }
 
 .plus {
-  /* ✅ 2 дөрвөлжний дунд */
+  /* ✅ 2 box алга үед төвд “+” */
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
 
-  width: 64px;
-  height: 64px;
+  width: 68px;
+  height: 68px;
   border-radius: 999px;
 
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -69,7 +81,7 @@
   align-items: center;
   justify-content: center;
 
-  font-size: 42px;
+  font-size: 44px;
   font-weight: 900;
   color: rgba(233, 238, 252, 0.92);
 
@@ -77,7 +89,6 @@
 }
 
 .dot {
-  /* ✅ зөв дөрвөлжний голд цэг */
   font-size: 86px;
   font-weight: 900;
   line-height: 1;
