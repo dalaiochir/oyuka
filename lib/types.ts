@@ -1,23 +1,45 @@
-export type StageType = "threat" | "neutral";
+export type Phase = "threat" | "neutral";
 
-export type Question = {
+export type Trial = {
   id: string;
-  stage: StageType;
-  prompt: string; // дэлгэц дээрх текст (хүсвэл хоосон байж болно)
-  leftImage: string;  // /images/...
-  rightImage: string; // /images/...
-  correct: "left" | "right";
-  leftLabel?: string;  // хүсвэл
-  rightLabel?: string; // хүсвэл
+  threatWord: string;
+  neutralWord: string;
+  // 0 = left is threat, 1 = right is threat
+  threatSide: 0 | 1;
+};
+
+export type TrialResult = {
+  trialId: string;
+  phase: Phase;
+  shownAtMs: number; // performance.now() snapshot (debug only)
+  responseAtMs: number; // performance.now() snapshot (debug only)
+  rtMs: number;
+  picked: "left" | "right";
+  correctSide: "left" | "right";
+  correct: boolean;
+  threatWord: string;
+  neutralWord: string;
 };
 
 export type Attempt = {
   id: string;
-  createdAt: string; // ISO
+  createdAtIso: string;
+  totalTrialsPerPhase: number;
   totalMs: number;
+  accuracyPct: number;
 
-  threat: { correct: number; total: number };
-  neutral: { correct: number; total: number };
+  threat: {
+    meanRtMs: number;
+    accuracyPct: number;
+  };
+  neutral: {
+    meanRtMs: number;
+    accuracyPct: number;
+  };
 
-  overall: { correct: number; total: number; accuracyPct: number };
+  // Attention Bias Score (ABS) = congruent RT - incongruent RT
+  // Here: threat phase mean RT - neutral phase mean RT
+  absMs: number;
+
+  results: TrialResult[];
 };

@@ -1,37 +1,119 @@
-.topRow {
+.wrap {
+  width: 100%;
+  margin-top: 18px;
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.progress {
-  color: rgba(233,238,252,0.7);
-  font-size: 14px;
-}
-
-.prompt {
-  margin-top: 8px;
-}
-
-.footer {
-  margin-top: 14px;
+.topBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.phasePill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-weight: 600;
+}
+
+.counter {
+  opacity: 0.9;
+  font-weight: 700;
+}
+
+.stage {
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+}
+
+.fixation {
+  height: 280px;
+  display: grid;
+  place-items: center;
+}
+
+.plus {
+  font-size: 88px;
+  font-weight: 800;
+  opacity: 0.95;
+}
+
+.grid {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  align-items: center;
   flex-wrap: wrap;
 }
 
 .hint {
-  color: rgba(233,238,252,0.65);
+  text-align: center;
+  opacity: 0.85;
+  min-height: 22px;
 }
 
-.feedback {
-  color: rgba(233,238,252,0.9);
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 50;
 }
 
-.countdownText {
-  color: rgba(233,238,252,0.85);
-  font-size: 18px;
+.overlayCard {
+  width: min(520px, 92vw);
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(20, 20, 24, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.overlayTitle {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.overlayText {
+  margin-top: 8px;
+  opacity: 0.9;
+  font-size: 16px;
+}
+
+.doneCard {
+  margin-top: 10px;
+  width: min(640px, 96vw);
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.doneTitle {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.doneText {
+  margin-top: 6px;
+  opacity: 0.9;
+}
+
+.linkBtn {
+  margin-top: 12px;
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  color: #fff;
+  font-weight: 700;
 }

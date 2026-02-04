@@ -1,97 +1,42 @@
-.wrapper {
+.box {
   position: relative;
-  margin-top: 14px;
-
-  /* ✅ pre үед ч layout үсрэхгүй (box-уудын өндөр хадгална) */
-  min-height: 240px;
-}
-
-.grid {
-  display: grid;
-  gap: 18px;
-  grid-template-columns: 1fr;
-
-  transition: opacity 180ms ease, transform 180ms ease;
-}
-
-@media (min-width: 860px) {
-  .grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-/* ✅ pre үед box-ууд "алга" болно */
-.gridHidden {
-  opacity: 0;
-  transform: scale(0.98);
-  pointer-events: none;
-}
-
-.choice {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.03);
+  width: min(420px, 44vw);
+  height: 220px;
   border-radius: 18px;
-
-  /* ✅ том дөрвөлжин */
-  min-height: 220px;
-  padding: 22px;
-
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
   cursor: pointer;
-  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+  display: grid;
+  place-items: center;
+  padding: 18px;
 }
 
-.choice:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.05);
+.box:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.choice:disabled {
-  cursor: not-allowed;
-  transform: none;
-  opacity: 0.95;
+.box:disabled {
+  cursor: default;
+  opacity: 0.9;
 }
 
 .word {
   font-size: 44px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  color: rgba(233, 238, 252, 0.96);
+  letter-spacing: 1px;
+  font-weight: 700;
   text-align: center;
-  line-height: 1.1;
-}
-
-.plus {
-  /* ✅ 2 box алга үед төвд “+” */
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-
-  /*
-  width: px;
-  height: 68px;
-  border-radius: 999px;
-
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.06);
-*/
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 60px;
-  font-weight: 900;
-  color: rgba(233, 238, 252, 0.92);
-
-  pointer-events: none;
 }
 
 .dot {
-  font-size: 86px;
-  font-weight: 900;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 72px;
   line-height: 1;
-  color: rgba(85, 211, 138, 0.95);
+  opacity: 0.95;
 }

@@ -1,60 +1,94 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import styles from "../../styles/Page.module.css";
+import table from "../../styles/History.module.css";
 import { Attempt } from "../../lib/types";
 import { clearHistory, loadHistory } from "../../lib/storage";
 import { formatMs, pickBestAttempt } from "../../lib/scoring";
-import styles from "../../styles/History.module.css";
 
 export default function HistoryPage() {
-  const [history, setHistory] = useState<Attempt[]>([]);
+  const [version, setVersion] = useState(0);
 
-  useEffect(() => {
-    setHistory(loadHistory());
-  }, []);
+  const attempts = useMemo<Attempt[]>(() => {
+    return loadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version]);
 
-  const best = useMemo(() => pickBestAttempt(history), [history]);
-
-  const onClear = () => {
-    clearHistory();
-    setHistory([]);
-  };
+  const best = useMemo(() => pickBestAttempt(attempts), [attempts]);
+  const latest = attempts[0] ?? null;
 
   return (
-    <div className="card">
-      <div className={styles.top}>
-        <h1>Түүх</h1>
-        <button className="btn" onClick={onClear} disabled={!history.length}>
-          Түүх цэвэрлэх
+    <main className={styles.page}>
+      <h1 className={styles.h1}>Түүх</h1>
+      <p className={styles.p}>
+        Таны тестүүд хадгалагдана. Хамгийн сүүлийн оролдлогыг “Best” оролдлоготой харьцуулж харуулна.
+      </p>
+
+      {latest && best && (
+        <div className={table.compare}>
+          <div className={table.card}>
+            <div className={table.cardTitle}>Сүүлийн үр дүн</div>
+            <div className={table.kv}><span>Хугацаа</span><b>{formatMs(latest.totalMs)}</b></div>
+            <div className={table.kv}><span>Зөв %</span><b>{latest.accuracyPct}%</b></div>
+            <div className={table.kv}><span>Threat mean RT</span><b>{Math.round(latest.threat.meanRtMs)}ms</b></div>
+            <div className={table.kv}><span>Neutral mean RT</span><b>{Math.round(latest.neutral.meanRtMs)}ms</b></div>
+            <div className={table.kv}><span>ABS (T−N)</span><b>{Math.round(latest.absMs)}ms</b></div>
+          </div>
+
+          <div className={table.card}>
+            <div className={table.cardTitle}>Best үр дүн</div>
+            <div className={table.kv}><span>Хугацаа</span><b>{formatMs(best.totalMs)}</b></div>
+            <div className={table.kv}><span>Зөв %</span><b>{best.accuracyPct}%</b></div>
+            <div className={table.kv}><span>Threat mean RT</span><b>{Math.round(best.threat.meanRtMs)}ms</b></div>
+            <div className={table.kv}><span>Neutral mean RT</span><b>{Math.round(best.neutral.meanRtMs)}ms</b></div>
+            <div className={table.kv}><span>ABS (T−N)</span><b>{Math.round(best.absMs)}ms</b></div>
+          </div>
+        </div>
+      )}
+
+      <div className={table.actions}>
+        <button
+          className={table.danger}
+          onClick={() => {
+            clearHistory();
+            setVersion((v) => v + 1);
+          }}
+        >
+          Түүх устгах
         </button>
       </div>
 
-      {!history.length ? (
-        <p>Одоогоор түүх байхгүй. Тест өгөөд үзээрэй.</p>
+      {attempts.length === 0 ? (
+        <div className={styles.p}>Одоогоор түүх хоосон байна.</div>
       ) : (
-        <div className={styles.list}>
-          {history.map((a) => {
-            const isBest = best?.id === a.id;
-            return (
-              <div key={a.id} className={`${styles.item} ${isBest ? styles.best : ""}`}>
-                <div className={styles.row1}>
-                  <div className={styles.date}>
-                    {new Date(a.createdAt).toLocaleString("mn-MN")}
-                  </div>
-                  {isBest && <span className={styles.badge}>ШИЛДЭГ</span>}
-                </div>
-
-                <div className={styles.metrics}>
-                  <span><b>Хугацаа:</b> {formatMs(a.totalMs)}</span>
-                  <span><b>Нийт:</b> {a.overall.correct}/{a.overall.total} ({a.overall.accuracyPct}%)</span>
-                  <span><b>Threat:</b> {a.threat.correct}/{a.threat.total}</span>
-                  <span><b>Neutral:</b> {a.neutral.correct}/{a.neutral.total}</span>
-                </div>
-              </div>
-            );
-          })}
+        <div className={table.tableWrap}>
+          <table className={table.t}>
+            <thead>
+              <tr>
+                <th>Огноо</th>
+                <th>Хугацаа</th>
+                <th>Зөв %</th>
+                <th>Threat RT</th>
+                <th>Neutral RT</th>
+                <th>ABS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {attempts.map((a) => (
+                <tr key={a.id}>
+                  <td>{new Date(a.createdAtIso).toLocaleString()}</td>
+                  <td>{formatMs(a.totalMs)}</td>
+                  <td>{a.accuracyPct}%</td>
+                  <td>{Math.round(a.threat.meanRtMs)}ms</td>
+                  <td>{Math.round(a.neutral.meanRtMs)}ms</td>
+                  <td>{Math.round(a.absMs)}ms</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
-    </div>
+    </main>
   );
 }
