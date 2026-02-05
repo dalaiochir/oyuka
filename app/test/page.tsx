@@ -1,16 +1,42 @@
-import styles from "../../../styles/Page.module.css";
-import EmotionalStroopTask from "../../../components/EmotionalStroopTask";
+import styles from "../../styles/Page.module.css";
 
-export default function StroopTestPage() {
+export default function TestPage() {
   return (
     <main className={styles.page}>
-      <h1 className={styles.h1}>Emotional Stroop Test</h1>
-      <p className={styles.p}>
-        Нийцтэй/нийцгүй нөхцөлд үгийн утга ба бэхний өнгө таарах/зөрөх байдлаар явна :contentReference[oaicite:6]{index=6}.
-        Мөн “neutral” нөхцөл нэмэх боломжтой :contentReference[oaicite:7]{index=7}.
-      </p>
+      <h1 className={styles.h1}>Тестүүд</h1>
+      <p className={styles.p}>Доорх тестүүдээс сонгоно уу.</p>
 
-      <EmotionalStroopTask trialsPerCondition={12} />
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
+        <a
+          href="/test/dot-probe"
+          style={{
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.16)",
+            background: "rgba(255,255,255,0.08)",
+            color: "#fff",
+            textDecoration: "none",
+            fontWeight: 900,
+          }}
+        >
+          Dot-Probe Test →
+        </a>
+
+        <a
+          href="/test/stroop"
+          style={{
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.16)",
+            background: "rgba(255,255,255,0.08)",
+            color: "#fff",
+            textDecoration: "none",
+            fontWeight: 900,
+          }}
+        >
+          Emotional Stroop Test →
+        </a>
+      </div>
     </main>
   );
 }
