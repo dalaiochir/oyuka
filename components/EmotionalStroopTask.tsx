@@ -25,145 +25,102 @@ function pickInk(except?: InkColorKey): InkColorKey {
 function makeTrials(perCond: number): StroopTrial[] {
   const n = Math.max(8, Math.min(60, perCond));
 
-  // congruent: color word == ink
-  const congruentWords = shuffle(STROOP_COLOR_WORDS).slice(0, n);
-  const congruent: StroopTrial[] = congruentWords.map((w) => {
-    const wKey = (["RED", "BLUE", "GREEN", "YELLOW"] as InkColorKey[]).includes(w as InkColorKey)
-      ? (w as InkColorKey)
-      : pickInk(); // unsupported color words get random ink
-    return {
-      id: uid(),
-      condition: "congruent",
-      word: w,
-      ink: wKey,
-      correctInk: wKey,
-    };
-  });
-
-  // incongruent: color word != ink
-  const incongruentWords = shuffle(STROOP_COLOR_WORDS).slice(0, n);
-  const incongruent: StroopTrial[] = incongruentWords.map((w) => {
-    const wKey = (["RED", "BLUE", "GREEN", "YELLOW"] as InkColorKey[]).includes(w as InkColorKey)
+  const congruent = shuffle(STROOP_COLOR_WORDS).slice(0, n).map((w) => {
+    const ink = ["RED", "BLUE", "GREEN", "YELLOW"].includes(w)
       ? (w as InkColorKey)
       : pickInk();
-    const ink = pickInk(wKey);
-    return {
-      id: uid(),
-      condition: "incongruent",
-      word: w,
-      ink,
-      correctInk: ink,
-    };
+    return { id: uid(), condition: "congruent", word: w, ink, correctInk: ink };
   });
 
-  // neutral: non-color word, random ink
-  const neutralWords = shuffle(STROOP_NEUTRAL_WORDS).slice(0, n);
-  const neutral: StroopTrial[] = neutralWords.map((w) => {
+  const incongruent = shuffle(STROOP_COLOR_WORDS).slice(0, n).map((w) => {
+    const base = ["RED", "BLUE", "GREEN", "YELLOW"].includes(w)
+      ? (w as InkColorKey)
+      : pickInk();
+    const ink = pickInk(base);
+    return { id: uid(), condition: "incongruent", word: w, ink, correctInk: ink };
+  });
+
+  const neutral = shuffle(STROOP_NEUTRAL_WORDS).slice(0, n).map((w) => {
     const ink = pickInk();
-    return {
-      id: uid(),
-      condition: "neutral",
-      word: w,
-      ink,
-      correctInk: ink,
-    };
+    return { id: uid(), condition: "neutral", word: w, ink, correctInk: ink };
   });
 
-  // order: congruent -> incongruent -> neutral (block-wise, break between)
   return [...congruent, ...incongruent, ...neutral];
 }
 
 type View = "fix" | "stim" | "break" | "done";
 
-export default function EmotionalStroopTask(props: { trialsPerCondition?: number }) {
-  const trialsPerCond = props.trialsPerCondition ?? 12;
-  const trials = useMemo(() => makeTrials(trialsPerCond), [trialsPerCond]);
+export default function EmotionalStroopTask({ trialsPerCondition = 12 }) {
+  const trials = useMemo(() => makeTrials(trialsPerCondition), [trialsPerCondition]);
 
   const [idx, setIdx] = useState(0);
   const [view, setView] = useState<View>("fix");
   const [breakLeft, setBreakLeft] = useState(3);
-
   const [results, setResults] = useState<StroopTrialResult[]>([]);
 
-  const shownAtRef = useRef<number>(0);
-  const startedAtRef = useRef<number>(0);
-
-  const fixTimer = useRef<number | null>(null);
-  const breakTimer = useRef<number | null>(null);
+  const shownAtRef = useRef(0);
+  const startedAtRef = useRef(0);
+  const blockHandledRef = useRef(false);
 
   const current = trials[idx];
-
-  const currentBlock: StroopCondition | null = current ? current.condition : null;
-  const prevBlock: StroopCondition | null =
-    idx > 0 ? trials[idx - 1]?.condition ?? null : null;
-
-  function clearTimers() {
-    if (fixTimer.current) window.clearTimeout(fixTimer.current);
-    if (breakTimer.current) window.clearInterval(breakTimer.current);
-    fixTimer.current = null;
-    breakTimer.current = null;
-  }
+  const prev = idx > 0 ? trials[idx - 1] : null;
 
   useEffect(() => {
     startedAtRef.current = performance.now();
-    return () => clearTimers();
   }, []);
 
-  // fixation 500ms -> stimulus
+  // 🔁 FIXATION → STIMULUS lifecycle
   useEffect(() => {
     if (!current) return;
+    if (view !== "fix") return;
 
-    // block changed => break
-    if (prevBlock && currentBlock && prevBlock !== currentBlock) {
+    // block солигдсон бол break харуулна
+    if (prev && prev.condition !== current.condition && !blockHandledRef.current) {
+      blockHandledRef.current = true;
       setView("break");
       setBreakLeft(3);
 
-      let remaining = 3;
-      breakTimer.current = window.setInterval(() => {
-        remaining -= 1;
-        setBreakLeft(remaining);
-        if (remaining <= 0) {
-          if (breakTimer.current) window.clearInterval(breakTimer.current);
-          breakTimer.current = null;
-
-          setView("fix");
+      let t = 3;
+      const timer = setInterval(() => {
+        t -= 1;
+        setBreakLeft(t);
+        if (t <= 0) {
+          clearInterval(timer);
+          setView("fix"); // fixation руу буцаана
         }
       }, 1000);
 
       return;
     }
 
-    setView("fix");
-    fixTimer.current = window.setTimeout(() => {
+    // fixation → stimulus
+    blockHandledRef.current = false;
+    const timer = setTimeout(() => {
       setView("stim");
       shownAtRef.current = performance.now();
     }, 500);
 
-    return () => {
-      if (fixTimer.current) window.clearTimeout(fixTimer.current);
-      fixTimer.current = null;
-    };
-  }, [idx, current, currentBlock, prevBlock]);
+    return () => clearTimeout(timer);
+  }, [idx, view, current, prev]);
 
-  function finish(finalResults: StroopTrialResult[]) {
-    const totalMs = Math.max(0, Math.round(performance.now() - startedAtRef.current));
-    const attempt = buildStroopAttempt({
-      id: uid(),
-      createdAtIso: new Date().toISOString(),
-      totalMs,
-      results: finalResults,
-    });
-    saveStroopAttempt(attempt);
+  function finish(final: StroopTrialResult[]) {
+    const totalMs = Math.round(performance.now() - startedAtRef.current);
+    saveStroopAttempt(
+      buildStroopAttempt({
+        id: uid(),
+        createdAtIso: new Date().toISOString(),
+        totalMs,
+        results: final,
+      })
+    );
     setView("done");
   }
 
   function onPick(picked: InkColorKey) {
-    if (!current) return;
-    if (view !== "stim") return;
+    if (!current || view !== "stim") return;
 
     const now = performance.now();
-    const rtMs = Math.max(0, Math.round(now - shownAtRef.current));
-    const correct = picked === current.correctInk;
+    const rtMs = Math.round(now - shownAtRef.current);
 
     const res: StroopTrialResult = {
       trialId: current.id,
@@ -172,32 +129,28 @@ export default function EmotionalStroopTask(props: { trialsPerCondition?: number
       ink: current.ink,
       correctInk: current.correctInk,
       picked,
-      correct,
+      correct: picked === current.correctInk,
       rtMs,
       shownAtMs: shownAtRef.current,
       responseAtMs: now,
     };
 
-    const nextResults = [...results, res];
-    setResults(nextResults);
+    const next = [...results, res];
+    setResults(next);
 
-    const nextIdx = idx + 1;
-    if (nextIdx >= trials.length) {
-      finish(nextResults);
-      return;
+    if (idx + 1 >= trials.length) {
+      finish(next);
+    } else {
+      setIdx((i) => i + 1);
+      setView("fix");
     }
-    setIdx(nextIdx);
-  }
-
-  if (!current && view !== "done") {
-    return <div className={styles.card}>Тест бэлтгэж байна…</div>;
   }
 
   if (view === "break") {
     return (
       <div className={styles.card}>
-        <div className={styles.title}>Block солигдоно</div>
-        <div className={styles.sub}>Дараагийн блок {breakLeft} секундийн дараа…</div>
+        <div className={styles.title}>Block солигдож байна</div>
+        <div className={styles.sub}>{breakLeft} секундийн дараа үргэлжилнэ</div>
       </div>
     );
   }
@@ -205,38 +158,26 @@ export default function EmotionalStroopTask(props: { trialsPerCondition?: number
   if (view === "done") {
     return (
       <div className={styles.card}>
-        <div className={styles.title}>Emotional Stroop дууслаа ✅</div>
-        <div className={styles.sub}>Үр дүн “Түүх” хэсэгт хадгалагдлаа.</div>
-        <div className={styles.row}>
-          <a className={styles.linkBtn} href="/test/stroop/result">Үр дүн харах</a>
-          <a className={styles.linkBtn} href="/test/stroop/history">Түүх</a>
-        </div>
+        <div className={styles.title}>Stroop тест дууслаа ✅</div>
+        <a className={styles.linkBtn} href="/test/stroop/result">Үр дүн харах</a>
       </div>
     );
   }
 
-  const inkCss = INK_COLORS.find((c) => c.key === current.ink)?.css ?? "#ffffff";
+  const inkCss = INK_COLORS.find((c) => c.key === current.ink)?.css ?? "#fff";
 
   return (
     <div className={styles.card}>
       <div className={styles.top}>
-        <div className={styles.pill}>
-          {current.condition === "congruent" && "Congruent"}
-          {current.condition === "incongruent" && "Incongruent"}
-          {current.condition === "neutral" && "Neutral"}
-        </div>
-        <div className={styles.count}>
-          {idx + 1}/{trials.length}
-        </div>
+        <div className={styles.pill}>{current.condition}</div>
+        <div className={styles.count}>{idx + 1}/{trials.length}</div>
       </div>
 
       <div className={styles.stage}>
         {view === "fix" ? (
           <div className={styles.fix}>+</div>
         ) : (
-          <div className={styles.word} style={{ color: inkCss }}>
-            {current.word}
-          </div>
+          <div className={styles.word} style={{ color: inkCss }}>{current.word}</div>
         )}
       </div>
 
@@ -247,7 +188,6 @@ export default function EmotionalStroopTask(props: { trialsPerCondition?: number
             className={styles.btn}
             onClick={() => onPick(c.key)}
             disabled={view !== "stim"}
-            style={{ borderColor: c.css }}
           >
             {c.key}
           </button>
@@ -255,7 +195,7 @@ export default function EmotionalStroopTask(props: { trialsPerCondition?: number
       </div>
 
       <div className={styles.hint}>
-        Үгийн <b>бэхний өнгө</b>-ийг сонго (үгний утгыг биш).
+        Үгийн <b>бэхний өнгө</b>-ийг сонго
       </div>
     </div>
   );
