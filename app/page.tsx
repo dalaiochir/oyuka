@@ -1,26 +1,42 @@
-import Link from "next/link";
+import styles from "../../styles/Page.module.css";
 
-export default function HomePage() {
+export default function TestPage() {
   return (
-    <div className="card">
-      <h1>2 үе шаттай үг таних тест</h1>
-      <p>
-        1) Заналхийлсэн (Threat) үг олох             2) Энгийн (Neutral) үг олох.
-        Сонголт бүрийн дараа зөв/бурууг харуулж, төгсгөлд хугацаа + хувь + өмнөх шилдэгтэй харьцуулна.
-      </p>
+    <main className={styles.page}>
+      <h1 className={styles.h1}>Тестүүд</h1>
+      <p className={styles.p}>Доорх тестүүдээс сонгоно уу.</p>
 
-      <div className="row">
-        <Link className="btn" href="/instructions">Заавар</Link>
-        <Link className="btn primary" href="/test">Тест эхлүүлэх</Link>
-        <Link className="btn primary" href="/test/stroop">Emotional Stroop Test</Link>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
+        <a
+          href="/test"
+          style={{
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.16)",
+            background: "rgba(255,255,255,0.08)",
+            color: "#fff",
+            textDecoration: "none",
+            fontWeight: 900,
+          }}
+        >
+          Dot-Probe Test
+        </a>
 
-
-        {/* <a href="/test/stroop" style={{ color: "#fff", textDecoration: "underline", fontWeight: 900 }}>
-  Emotional Stroop Test →
-</a> */}
-
-        <Link className="btn" href="/history">Түүх</Link>
+        <a
+          href="/test/stroop"
+          style={{
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.16)",
+            background: "rgba(255,255,255,0.08)",
+            color: "#fff",
+            textDecoration: "none",
+            fontWeight: 900,
+          }}
+        >
+          Emotional Stroop Test
+        </a>
       </div>
-    </div>
+    </main>
   );
 }
