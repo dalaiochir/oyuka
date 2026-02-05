@@ -13,6 +13,8 @@ import type { StroopAttempt } from "../../lib/stroopTypes";
 import { loadStroopHistory, clearStroopHistory } from "../../lib/stroopStorage";
 
 type TestFilter = "all" | "dot" | "stroop";
+type SortKey = "date" | "accuracy" | "key";
+type SortDir = "desc" | "asc";
 
 type UnifiedRow =
   | {
@@ -23,10 +25,6 @@ type UnifiedRow =
       accuracyPct: number;
       keyMetricLabel: "ABS";
       keyMetricValue: number; // ms
-      extra1Label: "Threat RT";
-      extra1Value: number; // ms
-      extra2Label: "Neutral RT";
-      extra2Value: number; // ms
       detailsHref: string;
     }
   | {
@@ -36,11 +34,7 @@ type UnifiedRow =
       totalMs: number;
       accuracyPct: number;
       keyMetricLabel: "I−C";
-      keyMetricValue: number; // ms (interference)
-      extra1Label: "C RT";
-      extra1Value: number; // ms
-      extra2Label: "I RT";
-      extra2Value: number; // ms
+      keyMetricValue: number; // ms
       detailsHref: string;
     };
 
@@ -54,17 +48,25 @@ function fmtStroopTime(ms: number) {
 function pickBestStroop(history: StroopAttempt[]) {
   if (history.length === 0) return null;
   return [...history].sort((a, b) => {
-    // 1) accuracy өндөр
+    // Best: accuracy өндөр -> I−C бага -> time бага
     if (b.accuracyPct !== a.accuracyPct) return b.accuracyPct - a.accuracyPct;
-    // 2) interference бага (I−C)
     if (a.interferenceMs !== b.interferenceMs) return a.interferenceMs - b.interferenceMs;
-    // 3) total time бага
     return a.totalMs - b.totalMs;
   })[0];
 }
 
+function toEpochMs(iso: string) {
+  const t = Date.parse(iso);
+  return Number.isFinite(t) ? t : 0;
+}
+
 export default function HistoryPage() {
   const [filter, setFilter] = useState<TestFilter>("all");
+  const [bestOnly, setBestOnly] = useState(false);
+
+  const [sortKey, setSortKey] = useState<SortKey>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
   const [dotHistory, setDotHistory] = useState<Attempt[]>([]);
   const [stroopHistory, setStroopHistory] = useState<StroopAttempt[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -86,10 +88,6 @@ export default function HistoryPage() {
       accuracyPct: a.accuracyPct,
       keyMetricLabel: "ABS",
       keyMetricValue: Math.round(a.absMs),
-      extra1Label: "Threat RT",
-      extra1Value: Math.round(a.threat.meanRtMs),
-      extra2Label: "Neutral RT",
-      extra2Value: Math.round(a.neutral.meanRtMs),
       detailsHref: `/history/dot-probe/${a.id}`,
     }));
 
@@ -101,64 +99,116 @@ export default function HistoryPage() {
       accuracyPct: a.accuracyPct,
       keyMetricLabel: "I−C",
       keyMetricValue: a.interferenceMs,
-      extra1Label: "C RT",
-      extra1Value: a.congruent.meanRtMs,
-      extra2Label: "I RT",
-      extra2Value: a.incongruent.meanRtMs,
       detailsHref: `/history/stroop/${a.id}`,
     }));
 
-    const all = [...dotRows, ...stroopRows];
-    all.sort((a, b) => (a.createdAtIso < b.createdAtIso ? 1 : -1)); // newest first
-    return all;
+    return [...dotRows, ...stroopRows];
   }, [dotHistory, stroopHistory]);
-
-  const filteredRows = useMemo(() => {
-    if (filter === "all") return rows;
-    if (filter === "dot") return rows.filter((r) => r.test === "dot");
-    return rows.filter((r) => r.test === "stroop");
-  }, [rows, filter]);
 
   const dotBestId = bestDot?.id ?? null;
   const stroopBestId = bestStroop?.id ?? null;
+
+  const filteredSortedRows = useMemo(() => {
+    // 1) test filter
+    let r = rows;
+    if (filter === "dot") r = r.filter((x) => x.test === "dot");
+    if (filter === "stroop") r = r.filter((x) => x.test === "stroop");
+
+    // 2) best only filter (★)
+    if (bestOnly) {
+      r = r.filter((x) => {
+        if (x.test === "dot") return dotBestId === x.id;
+        return stroopBestId === x.id;
+      });
+    }
+
+    // 3) sort
+    const dir = sortDir === "asc" ? 1 : -1;
+
+    const sorted = [...r].sort((a, b) => {
+      if (sortKey === "date") {
+        return (toEpochMs(a.createdAtIso) - toEpochMs(b.createdAtIso)) * dir;
+      }
+      if (sortKey === "accuracy") {
+        return (a.accuracyPct - b.accuracyPct) * dir;
+      }
+      // sortKey === "key"
+      // Dot-Probe: ABS бага байх тусам сайн гэж үзье (огцом bias бага)
+      // Stroop: I−C бага байх тусам сайн
+      // Тиймээс "key" дээр default-оор багаг нь сайн гэж бодоод:
+      // asc = good first, desc = bad first
+      const ka = a.keyMetricValue;
+      const kb = b.keyMetricValue;
+      return (ka - kb) * dir;
+    });
+
+    return sorted;
+  }, [rows, filter, bestOnly, sortKey, sortDir, dotBestId, stroopBestId]);
+
+  function clearByFilter() {
+    if (filter === "all") {
+      clearHistory();
+      clearStroopHistory();
+    } else if (filter === "dot") {
+      clearHistory();
+    } else {
+      clearStroopHistory();
+    }
+    setRefreshKey((x) => x + 1);
+  }
+
+  function toggleSort(nextKey: SortKey) {
+    if (sortKey !== nextKey) {
+      setSortKey(nextKey);
+      setSortDir("desc"); // шинэ key сонгоход default desc
+      return;
+    }
+    setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+  }
+
+  const sortArrow = (k: SortKey) => {
+    if (sortKey !== k) return "";
+    return sortDir === "desc" ? " ↓" : " ↑";
+  };
 
   return (
     <main className={styles.page}>
       <h1 className={styles.h1}>Түүх</h1>
       <p className={styles.p}>
-        Хоёр тестийн түүх нэг хүснэгтэд байна. “Test” filter-ээр ялгаж харна.
+        Хоёр тестийн түүх нэг хүснэгтэд байна. Filter + Sort ашиглаарай.
       </p>
 
-      {/* Filter bar */}
+      {/* Filters */}
       <div className={table.actions}>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <label style={{ fontWeight: 900, opacity: 0.9 }}>Test:</label>
-          <select
-            className={table.select}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as TestFilter)}
-          >
-            <option value="all">All</option>
-            <option value="dot">Dot-Probe Test</option>
-            <option value="stroop">Emotional Stroop Test</option>
-          </select>
+        <div className={table.filterRow}>
+          <div className={table.filterGroup}>
+            <span className={table.filterLabel}>Test:</span>
+            <select
+              className={table.select}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value as TestFilter)}
+            >
+              <option value="all">All</option>
+              <option value="dot">Dot-Probe Test</option>
+              <option value="stroop">Emotional Stroop Test</option>
+            </select>
+          </div>
 
-          <button
-            className={table.danger}
-            onClick={() => {
-              // filter == all үед хоёуланг устгах
-              if (filter === "all") {
-                clearHistory();
-                clearStroopHistory();
-              } else if (filter === "dot") {
-                clearHistory();
-              } else {
-                clearStroopHistory();
-              }
-              setRefreshKey((x) => x + 1);
-            }}
-          >
-            {filter === "all" ? "Бүх түүх устгах" : filter === "dot" ? "Dot-Probe түүх устгах" : "Stroop түүх устгах"}
+          <label className={table.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={bestOnly}
+              onChange={(e) => setBestOnly(e.target.checked)}
+            />
+            <span>Best only (★)</span>
+          </label>
+
+          <button className={table.danger} onClick={clearByFilter}>
+            {filter === "all"
+              ? "Бүх түүх устгах"
+              : filter === "dot"
+              ? "Dot-Probe түүх устгах"
+              : "Stroop түүх устгах"}
           </button>
         </div>
 
@@ -193,7 +243,7 @@ export default function HistoryPage() {
               <div className={table.kv}><span>Зөв %</span><b>{bestStroop.accuracyPct}%</b></div>
               <div className={table.kv}><span>I−C</span><b>{bestStroop.interferenceMs}ms</b></div>
               <p className={styles.p} style={{ marginTop: 10, marginBottom: 0, opacity: 0.85 }}>
-                * Best шалгуур: accuracy өндөр → I−C бага → хугацаа бага
+                * Best: accuracy өндөр → I−C бага → хугацаа бага
               </p>
               <div style={{ marginTop: 10 }}>
                 <Link className={table.linkLike} href={`/history/stroop/${bestStroop.id}`}>Дэлгэрэнгүй</Link>
@@ -205,8 +255,8 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {/* Unified table */}
-      {filteredRows.length === 0 ? (
+      {/* Table */}
+      {filteredSortedRows.length === 0 ? (
         <p className={styles.p} style={{ marginTop: 14 }}>Түүх хоосон байна.</p>
       ) : (
         <div className={table.tableWrap} style={{ marginTop: 14 }}>
@@ -215,18 +265,33 @@ export default function HistoryPage() {
               <tr>
                 <th>Test</th>
                 <th>Best</th>
-                <th>Огноо</th>
-                <th>Хугацаа</th>
-                <th>Зөв %</th>
-                <th>Key</th>
-                <th>Extra 1</th>
-                <th>Extra 2</th>
+
+                <th className={table.sortTh}>
+                  <button className={table.sortBtn} onClick={() => toggleSort("date")}>
+                    Date{sortArrow("date")}
+                  </button>
+                </th>
+
+                <th>Time</th>
+
+                <th className={table.sortTh}>
+                  <button className={table.sortBtn} onClick={() => toggleSort("accuracy")}>
+                    Accuracy{sortArrow("accuracy")}
+                  </button>
+                </th>
+
+                <th className={table.sortTh}>
+                  <button className={table.sortBtn} onClick={() => toggleSort("key")}>
+                    Key metric{sortArrow("key")}
+                  </button>
+                </th>
+
                 <th>Дэлгэрэнгүй</th>
               </tr>
             </thead>
 
             <tbody>
-              {filteredRows.map((r) => {
+              {filteredSortedRows.map((r) => {
                 const isBest =
                   (r.test === "dot" && dotBestId === r.id) ||
                   (r.test === "stroop" && stroopBestId === r.id);
@@ -252,14 +317,6 @@ export default function HistoryPage() {
                     </td>
 
                     <td>
-                      <b>{r.extra1Label}</b>: {r.extra1Value}ms
-                    </td>
-
-                    <td>
-                      <b>{r.extra2Label}</b>: {r.extra2Value}ms
-                    </td>
-
-                    <td>
                       <Link href={r.detailsHref} style={{ color: "#fff", textDecoration: "underline" }}>
                         Харах
                       </Link>
@@ -269,6 +326,10 @@ export default function HistoryPage() {
               })}
             </tbody>
           </table>
+
+          <div className={table.sortHint}>
+            Sort: Date / Accuracy / Key metric дээр дарж эрэмбэлнэ (дахин дарвал ↑↓ солино).
+          </div>
         </div>
       )}
     </main>

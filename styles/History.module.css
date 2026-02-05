@@ -143,3 +143,62 @@
   font-weight: 1000;
 }
 
+.filterRow{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filterGroup{
+  display:flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filterLabel{
+  font-weight: 900;
+  opacity: .9;
+}
+
+.checkboxRow{
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.06);
+  font-weight: 900;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxRow input{
+  width: 16px;
+  height: 16px;
+  accent-color: #ffffff;
+}
+
+.sortTh{
+  white-space: nowrap;
+}
+
+.sortBtn{
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-weight: 1000;
+  cursor: pointer;
+  padding: 6px 6px;
+}
+
+.sortBtn:hover{
+  text-decoration: underline;
+}
+
+.sortHint{
+  margin-top: 10px;
+  opacity: .85;
+  font-size: 13px;
+}
