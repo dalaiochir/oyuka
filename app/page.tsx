@@ -12,6 +12,10 @@ export default function HomePage() {
       <div className="row">
         <Link className="btn" href="/instructions">Заавар</Link>
         <Link className="btn primary" href="/test">Тест эхлүүлэх</Link>
+        <a href="/test/stroop" style={{ color: "#fff", textDecoration: "underline", fontWeight: 900 }}>
+  Emotional Stroop Test →
+</a>
+
         <Link className="btn" href="/history">Түүх</Link>
       </div>
     </div>

@@ -1,13 +1,16 @@
-import DotProbeWordTask from "../../components/DotProbeWordTask";
-import styles from "../../styles/Page.module.css";
+import styles from "../../../styles/Page.module.css";
+import EmotionalStroopTask from "../../../components/EmotionalStroopTask";
 
-export default function TestPage() {
+export default function StroopTestPage() {
   return (
     <main className={styles.page}>
-      <h1 className={styles.h1}>Тест</h1>
-      <p className={styles.p}>2 үе шаттай: (1) заналхийлсэн үг, (2) энгийн үг.</p>
+      <h1 className={styles.h1}>Emotional Stroop Test</h1>
+      <p className={styles.p}>
+        Нийцтэй/нийцгүй нөхцөлд үгийн утга ба бэхний өнгө таарах/зөрөх байдлаар явна :contentReference[oaicite:6]{index=6}.
+        Мөн “neutral” нөхцөл нэмэх боломжтой :contentReference[oaicite:7]{index=7}.
+      </p>
 
-      <DotProbeWordTask trialsPerPhase={12} />
+      <EmotionalStroopTask trialsPerCondition={12} />
     </main>
   );
 }
