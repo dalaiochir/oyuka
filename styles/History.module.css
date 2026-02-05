@@ -76,3 +76,28 @@
   background: rgba(255, 255, 255, 0.06);
   font-weight: 900;
 }
+
+.tab{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.06);
+  color:#fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tab:hover{
+  background: rgba(255,255,255,0.10);
+}
+
+.tabActive{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.14);
+  color:#fff;
+  font-weight: 1000;
+  cursor: pointer;
+}
+
