@@ -212,9 +212,9 @@ export default function HistoryPage() {
           </button>
         </div>
 
-        <Link href="/test" style={{ color: "#fff", textDecoration: "underline", fontWeight: 800 }}>
+        {/* <Link href="/test" style={{ color: "#fff", textDecoration: "underline", fontWeight: 800 }}>
           Тестүүд рүү
-        </Link>
+        </Link> */}
       </div>
 
       {/* Best cards */}

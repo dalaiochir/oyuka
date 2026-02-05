@@ -12,11 +12,6 @@
   }
 }
 
-.heroTop, .previewCard, .noteCard, .card, .footerInner, .stat, .metric{
-  border: 1px solid var(--mk-border);
-  background: rgba(80,141,78,0.20); /* 508D4E */
-  box-shadow: var(--mk-shadow);
-}
 
 
 .heroTop{

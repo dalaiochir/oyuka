@@ -63,7 +63,7 @@ export default function HomePage() {
 
           <div className={home.ctaRow}>
             <Link className={home.primaryBtn} href="/test">
-              Тест эхлэх →
+              Тест эхлэх
             </Link>
             <Link className={home.ghostBtn} href="/instructions">
               Заавар үзэх
