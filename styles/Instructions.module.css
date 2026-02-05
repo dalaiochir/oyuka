@@ -1,0 +1,247 @@
+.hero{
+  border-radius: 18px;
+  border: 1px solid var(--mk-border);
+  background: linear-gradient(180deg, rgba(80,141,78,0.26), rgba(80,141,78,0.14));
+  padding: 18px;
+  box-shadow: var(--mk-shadow);
+  margin-top: 8px;
+}
+
+.badge{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--mk-border);
+  background: rgba(214,239,216,0.10);
+  font-weight: 1000;
+  letter-spacing: .2px;
+}
+
+.title{
+  margin: 12px 0 8px;
+  font-size: 30px;
+  font-weight: 1100;
+  line-height: 1.1;
+}
+
+.subtitle{
+  margin: 0;
+  opacity: .9;
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.ctaRow{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.primaryBtn{
+  display:inline-block;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--mk-border-strong);
+  background: rgba(214,239,216,0.18);
+  color: #1A5319;
+  text-decoration:none;
+  font-weight: 1100;
+}
+
+.primaryBtn:hover{
+  background: rgba(214,239,216,0.26);
+}
+
+.ghostBtn{
+  display:inline-block;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--mk-border);
+  background: rgba(214,239,216,0.08);
+  color:#D6EFD8;
+  text-decoration:none;
+  font-weight: 1100;
+}
+
+.ghostBtn:hover{
+  background: rgba(214,239,216,0.12);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 900px){
+  .grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+.card{
+  border-radius: 18px;
+  border: 1px solid var(--mk-border);
+  background: rgba(80,141,78,0.18);
+  padding: 14px;
+  box-shadow: var(--mk-shadow);
+}
+
+.cardWide{
+  grid-column: 1 / -1;
+  border-radius: 18px;
+  border: 1px solid var(--mk-border);
+  background: rgba(80,141,78,0.16);
+  padding: 14px;
+  box-shadow: var(--mk-shadow);
+}
+
+.cardTop{
+  display:flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.cardTitle{
+  font-weight: 1100;
+  font-size: 16px;
+}
+
+.tag{
+  font-size: 12px;
+  opacity: .85;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--mk-border);
+  background: rgba(214,239,216,0.08);
+}
+
+.list{
+  margin: 0;
+  padding-left: 18px;
+  opacity: .9;
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.steps{
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.step{
+  display:flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(214,239,216,0.14);
+  background: rgba(26,83,25,0.18);
+}
+
+.stepNum{
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 1100;
+  border: 1px solid rgba(214,239,216,0.24);
+  background: rgba(214,239,216,0.10);
+  color: #D6EFD8;
+  flex: 0 0 auto;
+}
+
+.stepBody{
+  flex: 1;
+}
+
+.stepTitle{
+  font-weight: 1100;
+  margin-bottom: 2px;
+}
+
+.stepText{
+  opacity: .9;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.note{
+  margin-top: 12px;
+  padding: 10px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(214,239,216,0.16);
+  background: rgba(214,239,216,0.08);
+}
+
+.noteTitle{
+  font-weight: 1100;
+  margin-bottom: 4px;
+  color: #D6EFD8;
+}
+
+.noteText{
+  opacity: .9;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cardActions{
+  margin-top: 12px;
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.smallBtn{
+  display:inline-block;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--mk-border-strong);
+  background: rgba(214,239,216,0.18);
+  color:#1A5319;
+  text-decoration:none;
+  font-weight: 1100;
+}
+
+.smallBtn:hover{
+  background: rgba(214,239,216,0.24);
+}
+
+.wideGrid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+@media (max-width: 900px){
+  .wideGrid{
+    grid-template-columns: 1fr;
+  }
+}
+
+.wideBlock{
+  padding: 12px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(214,239,216,0.14);
+  background: rgba(26,83,25,0.16);
+}
+
+.wideTitle{
+  font-weight: 1100;
+  margin-bottom: 6px;
+}
+
+.wideText{
+  opacity: .9;
+  line-height: 1.55;
+  font-size: 14px;
+}
